@@ -20,7 +20,7 @@ class InventoryListScreen extends Screen
     public function query(): array
     {
         return [
-            'inventories' => Inventory::paginate()
+            'inventories' => Inventory::all()
         ];
     }
 
@@ -57,19 +57,14 @@ class InventoryListScreen extends Screen
     {
         return [
             Layout::table('inventories', [
-                TD::make('id', 'ID')->sort(),
-                TD::make('name', 'Name')->sort(),
+                TD::make('name', __('Name'))
+                    ->sort()
+                    ->render(function (Inventory $inventory) {
+                        return Link::make($inventory->name)
+                            ->route('platform.inventory.edit', $inventory);
+                    }),
                 TD::make('quantity', 'Quantity')->sort(),
                 TD::make('price', 'Price')->sort(),
-                TD::make('created_at', 'Created At')->sort(),
-                TD::make('updated_at', 'Updated At')->sort(),
-                TD::make('Actions')
-                -> render(function (Inventory $inventory) {
-                    return Link::make('Редактировать')
-                        ->route('platform.inventory.edit', [
-                            'inventiry_id' => $inventory->id,
-                        ]);
-                }),
             ]),
         ];
     }

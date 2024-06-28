@@ -20,7 +20,7 @@ class FinanceListScreen extends Screen
     public function query(): array
     {
         return [
-            'finances' => Finance::paginate()
+            'finances' => Finance::all()
         ];
     }
 
@@ -57,19 +57,14 @@ class FinanceListScreen extends Screen
     {
         return [
             Layout::table('finances', [
-                TD::make('id', 'ID')->sort(),
-                TD::make('amount', 'Amount')->sort(),
+                TD::make('amount', __('Amount'))
+                ->sort()
+                ->render(function (Finance $finance) {
+                    return Link::make($finance->amount)
+                        ->route('platform.finance.edit', $finance);
+                }),
                 TD::make('type', 'Type')->sort(),
                 TD::make('description', 'Description')->sort(),
-                TD::make('created_at', 'Created At')->sort(),
-                TD::make('updated_at', 'Updated At')->sort(),
-                TD::make('Actions')
-                -> render(function (Finance $finance) {
-                    return Link::make('Редактировать')
-                        ->route('platform.finance.edit', [
-                            'finance_id' => $finance->id,
-                        ]);
-                }),
             ]),
         ];
     }

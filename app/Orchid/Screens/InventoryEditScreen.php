@@ -9,6 +9,7 @@ use Orchid\Support\Facades\Layout;
 use Orchid\Screen\Actions\Button;
 use Orchid\Support\Facades\Alert;
 use Orchid\Support\Facades\Toast;
+use Illuminate\Http\Request;
 
 class InventoryEditScreen extends Screen
 {
@@ -32,7 +33,7 @@ class InventoryEditScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'InventoryEditScreen';
+        return $this->inventory->exists ? 'Edit inventory' : 'Creating a new inventory';
     }
 
     /**
@@ -43,9 +44,20 @@ class InventoryEditScreen extends Screen
     public function commandBar(): array
     {
         return [
-            Button::make('Save')
-                ->icon('check')
-                ->method('save'),
+            Button::make('Create product')
+                ->icon('pencil')
+                ->method('createOrUpdate')
+                ->canSee(!$this->inventory->exists),
+
+            Button::make('Update')
+                ->icon('note')
+                ->method('createOrUpdate')
+                ->canSee($this->inventory->exists),
+
+            Button::make('Remove')
+                ->icon('trash')
+                ->method('remove')
+                ->canSee($this->inventory->exists),
         ];
     }
 
@@ -75,16 +87,21 @@ class InventoryEditScreen extends Screen
             ])
         ];
     }
-    public function save()
+    public function createOrUpdate(Request $request)
     {
-        if (intval(request() -> route('inventory_id'))) {
-            Inventory::findOrFail(request() -> route('inventory_id')) -> update(request() -> input('inventory'));
-        } else {
-            Inventory::create(request() -> input('inventory'));
-        }
+        $this->inventory->fill($request->get('inventory'))->save();
 
-        Toast::success('Клиент успешно сохранен');
-        return redirect()
-            -> route('platform.inventory.list');
+        Alert::info('You have successfully created a inventory.');
+
+        return redirect()->route('platform.inventory.list');
+    }
+
+    public function remove()
+    {
+        $this->inventory->delete();
+
+        Alert::info('You have successfully deleted the inventory.');
+
+        return redirect()->route('platform.inventory.list');
     }
 }

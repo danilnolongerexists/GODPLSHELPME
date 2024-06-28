@@ -9,7 +9,8 @@ use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Select;
 use Orchid\Support\Facades\Layout;
 use Orchid\Screen\Actions\Button;
-use Orchid\Support\Facades\Toast;
+use Orchid\Support\Facades\Alert;
+use Illuminate\Http\Request;
 
 class OrderEditScreen extends Screen
 {
@@ -34,7 +35,7 @@ class OrderEditScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'OrderEditScreen';
+        return $this->order->exists ? 'Edit order' : 'Creating a new order';
     }
 
     /**
@@ -45,9 +46,20 @@ class OrderEditScreen extends Screen
     public function commandBar(): array
     {
         return [
-            Button::make('Save')
-                ->icon('check')
-                ->method('save'),
+            Button::make('Create product')
+                ->icon('pencil')
+                ->method('createOrUpdate')
+                ->canSee(!$this->order->exists),
+
+            Button::make('Update')
+                ->icon('note')
+                ->method('createOrUpdate')
+                ->canSee($this->order->exists),
+
+            Button::make('Remove')
+                ->icon('trash')
+                ->method('remove')
+                ->canSee($this->order->exists),
         ];
     }
 
@@ -77,16 +89,21 @@ class OrderEditScreen extends Screen
             ])
         ];
     }
-    public function save()
+    public function createOrUpdate(Request $request)
     {
-        if (intval(request() -> route('order_id'))) {
-            Order::findOrFail(request() -> route('order_id')) -> update(request() -> input('order'));
-        } else {
-            Order::create(request() -> input('order'));
-        }
+        $this->order->fill($request->get('order'))->save();
 
-        Toast::success('Заказ успешно сохранен');
-        return redirect()
-            -> route('platform.order.list');
+        Alert::info('You have successfully created a order.');
+
+        return redirect()->route('platform.order.list');
+    }
+
+    public function remove()
+    {
+        $this->order->delete();
+
+        Alert::info('You have successfully deleted the order.');
+
+        return redirect()->route('platform.order.list');
     }
 }

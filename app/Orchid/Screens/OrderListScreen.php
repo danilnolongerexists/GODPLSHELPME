@@ -20,7 +20,7 @@ class OrderListScreen extends Screen
     public function query(): array
     {
         return [
-            'orders' => Order::with('client')->paginate()
+            'orders' => Order::all()
         ];
     }
 
@@ -57,19 +57,14 @@ class OrderListScreen extends Screen
     {
         return [
             Layout::table('orders', [
-                TD::make('id', 'ID')->sort(),
-                TD::make('client.name', 'Client')->sort(),
+                TD::make('client.name', __('Client'))
+                    ->sort()
+                    ->render(function (Order $order) {
+                        return Link::make($order->client->name)
+                            ->route('platform.order.edit', $order);
+                    }),
                 TD::make('status', 'Status')->sort(),
                 TD::make('total', 'Total')->sort(),
-                TD::make('created_at', 'Created At')->sort(),
-                TD::make('updated_at', 'Updated At')->sort(),
-                TD::make('Actions')
-                -> render(function (Order $order) {
-                    return Link::make('Редактировать')
-                        ->route('platform.order.edit', [
-                            'order_id' => $order->id,
-                        ]);
-                }),
             ]),
         ];
     }

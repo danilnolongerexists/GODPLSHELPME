@@ -33,7 +33,7 @@ class FinanceEditScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'FinanceEditScreen';
+        return $this->finance->exists ? 'Edit finance' : 'Creating a new finance';
     }
 
     /**
@@ -44,9 +44,20 @@ class FinanceEditScreen extends Screen
     public function commandBar(): array
     {
         return [
-            Button::make('Save')
-                ->icon('check')
-                ->method('save'),
+            Button::make('Create product')
+                ->icon('pencil')
+                ->method('createOrUpdate')
+                ->canSee(!$this->finance->exists),
+
+            Button::make('Update')
+                ->icon('note')
+                ->method('createOrUpdate')
+                ->canSee($this->finance->exists),
+
+            Button::make('Remove')
+                ->icon('trash')
+                ->method('remove')
+                ->canSee($this->finance->exists),
         ];
     }
 
@@ -76,16 +87,21 @@ class FinanceEditScreen extends Screen
         ];
     }
 
-    public function save()
+    public function createOrUpdate(Request $request)
     {
-        if (intval(request() -> route('finance_id'))) {
-            Finance::findOrFail(request() -> route('finance_id')) -> update(request() -> input('finance'));
-        } else {
-            Finance::create(request() -> input('finance'));
-        }
+        $this->finance->fill($request->get('finance'))->save();
 
-        Toast::success('Заказ успешно сохранен');
-        return redirect()
-            -> route('platform.finance.list');
+        Alert::info('You have successfully created a finance.');
+
+        return redirect()->route('platform.finance.list');
+    }
+
+    public function remove()
+    {
+        $this->finance->delete();
+
+        Alert::info('You have successfully deleted the finance.');
+
+        return redirect()->route('platform.finance.list');
     }
 }
