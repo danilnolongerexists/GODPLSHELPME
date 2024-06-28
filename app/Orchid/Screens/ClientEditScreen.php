@@ -91,9 +91,20 @@ class ClientEditScreen extends Screen
 
     public function createOrUpdate(Request $request)
     {
-        $this->client->fill($request->get('client'))->save();
+        $request->validate([
+            'client.name' => 'required|string|max:255',
+            'client.email' => 'required|email|max:255|unique:clients,email,' . $this->client->id,
+            'client.phone' => 'required|string|max:20|unique:clients,phone,' . $this->client->id,
+        ]);
 
-        Alert::info('You have successfully created a client.');
+        try {
+            $this->client->fill($request->get('client'))->save();
+            Alert::info('You have successfully created or updated the client.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['client.email' => 'The email has already been taken.']);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['client.phone' => 'The phone has already been taken.']);
+        }
 
         return redirect()->route('platform.client.list');
     }
